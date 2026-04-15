@@ -1,236 +1,191 @@
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import terminalImage from 'terminal-image';
+import { fetchAndRenderCardImage } from './image.js';
 
-// One Piece TCG color theming
-const COLOR_MAP = {
-  Red: chalk.redBright,
-  Blue: chalk.cyanBright,
-  Green: chalk.greenBright,
-  Purple: chalk.magentaBright,
-  Black: chalk.gray,
-  Yellow: chalk.yellowBright,
+// ─── One Piece TCG color theming ────────────────────────────────────────────
+const COLOR_FN = {
+  Red:    (s) => chalk.bgRgb(180, 30, 30).whiteBright(s),
+  Blue:   (s) => chalk.bgRgb(30, 100, 180).whiteBright(s),
+  Green:  (s) => chalk.bgRgb(30, 140, 60).whiteBright(s),
+  Purple: (s) => chalk.bgRgb(120, 40, 160).whiteBright(s),
+  Black:  (s) => chalk.bgRgb(40, 40, 40).whiteBright(s),
+  Yellow: (s) => chalk.bgRgb(200, 170, 0).black(s),
 };
 
-const RARITY_MAP = {
-  Leader: chalk.bold.yellowBright,
-  Common: chalk.white,
-  Uncommon: chalk.green,
-  Rare: chalk.blueBright,
-  'Super Rare': chalk.magentaBright,
+const COLOR_DOT = {
+  Red:    chalk.redBright('●Red'),
+  Blue:   chalk.cyanBright('●Blue'),
+  Green:  chalk.greenBright('●Green'),
+  Purple: chalk.magentaBright('●Purple'),
+  Black:  chalk.gray('●Black'),
+  Yellow: chalk.yellowBright('●Yellow'),
+};
+
+const RARITY_COLOR = {
+  'Leader':      chalk.bold.yellowBright,
+  'Common':      chalk.white,
+  'Uncommon':    chalk.greenBright,
+  'Rare':        chalk.blueBright,
+  'Super Rare':  chalk.magentaBright,
   'Secret Rare': chalk.bold.redBright,
-  'Special Card': chalk.bold.yellow,
-  Promo: chalk.bold.cyan,
-  Leader_: chalk.bold.yellowBright,
+  'Special Card':chalk.bold.yellow,
+  'Promo':       chalk.bold.cyan,
 };
 
-export function colorizeCardColors(colors) {
-  if (!colors || colors.length === 0) return chalk.gray('—');
-  return colors.map(c => {
-    const fn = COLOR_MAP[c] || chalk.white;
-    return fn(`●${c}`);
-  }).join(' ');
+const TABLE_CHARS = {
+  top: '─', 'top-mid': '┬', 'top-left': '╭', 'top-right': '╮',
+  bottom: '─', 'bottom-mid': '┴', 'bottom-left': '╰', 'bottom-right': '╯',
+  left: '│', 'left-mid': '├', mid: '─', 'mid-mid': '┼',
+  right: '│', 'right-mid': '┤', middle: '│',
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function colorsTag(colors = []) {
+  return colors.map(c => COLOR_DOT[c] ?? chalk.white(`●${c}`)).join(' ');
 }
 
-export function colorizeRarity(rarity) {
-  const fn = RARITY_MAP[rarity] || chalk.white;
-  return fn(rarity || '—');
+function rarityTag(r) {
+  return (RARITY_COLOR[r] ?? chalk.white)(r || '—');
 }
 
-export function formatBerry(amount) {
-  if (!amount) return '—';
-  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(0)}B`;
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(0)}M`;
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K`;
-  return amount.toString();
+function fmtPower(n) {
+  return n != null ? chalk.bold(n.toLocaleString()) : chalk.dim('—');
 }
 
-export async function printCardImage(card) {
-  const url = card.img_full_url;
-  if (!url) {
-    console.log(chalk.dim('  (no image available)'));
-    return;
+function wrapWords(text, maxW) {
+  if (!text) return [];
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const test = cur ? `${cur} ${w}` : w;
+    if (stripAnsi(test).length > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = test;
   }
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Referer': 'https://en.onepiece-cardgame.com/',
-      },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    const img = await terminalImage.buffer(buf, { width: 32, preserveAspectRatio: true });
-    process.stdout.write(img);
-    console.log('');
-  } catch (err) {
-    console.log(chalk.dim(`  (image unavailable: ${err.message})`));
-  }
+  if (cur) lines.push(cur);
+  return lines;
 }
 
-export function printCard(card) {
-  const width = 56;
-  const line = chalk.dim('─'.repeat(width));
-  const top = chalk.dim('╭' + '─'.repeat(width) + '╮');
-  const bot = chalk.dim('╰' + '─'.repeat(width) + '╯');
+function stripAnsi(s) {
+  return s.replace(/\x1B\[[0-9;]*m/g, '');
+}
+
+// ─── Card detail panel ───────────────────────────────────────────────────────
+export async function printCard(card, { imageSize } = {}) {
+  const W = 58;
+  const top = chalk.dim('╭' + '─'.repeat(W) + '╮');
+  const bot = chalk.dim('╰' + '─'.repeat(W) + '╯');
+  const mid = chalk.dim('├' + '─'.repeat(W) + '┤');
   const side = chalk.dim('│');
 
-  const row = (left, right = '') => {
-    const content = right ? `${left}${right}` : left;
-    const padded = content.padEnd(width);
-    return `${side} ${padded} ${side}`;
+  const row = (content) => {
+    const plain = stripAnsi(content);
+    const pad = Math.max(0, W - plain.length);
+    return `${side} ${content}${' '.repeat(pad)} ${side}`;
   };
 
-  const categoryColor = card.category === 'Leader' ? chalk.bold.yellowBright
-    : card.category === 'Event' ? chalk.bold.magenta
+  // Optional card image above the panel
+  if (imageSize && card.img_full_url) {
+    try {
+      const img = await fetchAndRenderCardImage(card.img_full_url, imageSize);
+      process.stdout.write(img);
+      console.log('');
+    } catch {
+      // silently skip if image fails
+    }
+  }
+
+  // Card type color badge
+  const colorBadge = (card.colors || []).map(c => {
+    const fn = COLOR_FN[c];
+    return fn ? fn(` ${c} `) : chalk.white(c);
+  }).join(' ');
+
+  const catStyle = card.category === 'Leader'
+    ? chalk.bold.yellowBright
+    : card.category === 'Event' ? chalk.magentaBright
     : chalk.bold.white;
 
-  // Header row: card id + name + category
-  const idStr = chalk.dim(card.id || '');
-  const nameStr = chalk.bold.white(card.name || 'Unknown');
-  const catStr = categoryColor(`[${card.category || '?'}]`);
-  const headerLeft = `${idStr}  ${nameStr}  `;
-  const headerRight = catStr;
-
-  // Colors row
-  const colorsStr = colorizeCardColors(card.colors);
-  const rarityStr = colorizeRarity(card.rarity);
-
-  // Cost / Power / Counter
-  const costStr = card.cost != null ? chalk.white(`Cost: ${chalk.bold(card.cost)}`) : '';
-  const powerStr = card.power != null ? chalk.white(`Power: ${chalk.bold(card.power)}`) : '';
-  const counterStr = card.counter != null ? chalk.white(`Counter: ${chalk.bold('+' + card.counter)}`) : '';
-
-  const statsArr = [costStr, powerStr, counterStr].filter(Boolean);
-
-  // Types
-  const typesStr = card.types?.length
-    ? chalk.cyan(card.types.join(', '))
-    : null;
-
-  // Attributes
-  const attrsStr = card.attributes?.length
-    ? chalk.yellow(card.attributes.join(', '))
-    : null;
-
-  // Effect (word-wrap at width-2)
-  const effectLines = wrapText(card.effect || '', width - 2);
-  const triggerLines = card.trigger ? wrapText(`[Trigger] ${card.trigger}`, width - 2) : [];
-
   console.log(top);
-  console.log(row(`${idStr}  ${nameStr}  ${catStr}`));
-  console.log(row(chalk.dim(line)));
-  console.log(row(`${colorsStr}   ${rarityStr}`));
-  if (statsArr.length) console.log(row(statsArr.join('  ')));
-  if (typesStr) console.log(row(`${chalk.dim('Types:')} ${typesStr}`));
-  if (attrsStr) console.log(row(`${chalk.dim('Attribute:')} ${attrsStr}`));
+  console.log(row(`${chalk.dim(card.id || '')}  ${chalk.bold.white(card.name || '?')}  ${catStyle(`[${card.category || '?'}]`)}`));
+  console.log(row(colorBadge + '   ' + rarityTag(card.rarity)));
+  console.log(row(chalk.dim('─'.repeat(W))));
+
+  // Stats row
+  const stats = [];
+  if (card.cost != null)    stats.push(`${chalk.dim('Cost')} ${chalk.bold(card.cost)}`);
+  if (card.power != null)   stats.push(`${chalk.dim('Power')} ${fmtPower(card.power)}`);
+  if (card.counter != null) stats.push(`${chalk.dim('Counter')} ${chalk.bold('+' + card.counter)}`);
+  if (stats.length) console.log(row(stats.join('   ')));
+
+  if (card.types?.length)
+    console.log(row(`${chalk.dim('Types:')} ${chalk.cyanBright(card.types.join(', '))}`));
+  if (card.attributes?.length)
+    console.log(row(`${chalk.dim('Attribute:')} ${chalk.yellowBright(card.attributes.join(', '))}`));
+
   if (card.effect) {
     console.log(row(''));
     console.log(row(chalk.dim('Effect:')));
-    effectLines.forEach(l => console.log(row(chalk.white(l))));
+    wrapWords(card.effect, W - 2).forEach(l => console.log(row(chalk.white(l))));
   }
-  if (triggerLines.length) {
+  if (card.trigger) {
     console.log(row(''));
-    triggerLines.forEach(l => console.log(row(chalk.magenta(l))));
+    wrapWords(`[Trigger] ${card.trigger}`, W - 2).forEach(l => console.log(row(chalk.magentaBright(l))));
   }
+
   console.log(bot);
+
+  if (card.img_full_url) {
+    console.log(chalk.dim(`  Image: ${card.img_full_url.split('?')[0]}`));
+  }
 }
 
-export function printCardsTable(cards, { showSet = false } = {}) {
-  const cols = showSet
-    ? ['ID', 'Name', 'Category', 'Color(s)', 'Cost', 'Power', 'Rarity']
-    : ['ID', 'Name', 'Category', 'Color(s)', 'Cost', 'Power', 'Rarity'];
-
+// ─── Cards table ─────────────────────────────────────────────────────────────
+export function printCardsTable(cards) {
   const table = new Table({
-    head: cols.map(c => chalk.bold.yellowBright(c)),
+    head: ['ID', 'Name', 'Category', 'Color(s)', 'Cost', 'Power', 'Rarity']
+      .map(c => chalk.bold.yellowBright(c)),
     style: { border: ['dim'], head: [] },
-    chars: {
-      top: '─', 'top-mid': '┬', 'top-left': '╭', 'top-right': '╮',
-      bottom: '─', 'bottom-mid': '┴', 'bottom-left': '╰', 'bottom-right': '╯',
-      left: '│', 'left-mid': '├', mid: '─', 'mid-mid': '┼',
-      right: '│', 'right-mid': '┤', middle: '│',
-    },
+    chars: TABLE_CHARS,
   });
 
-  for (const card of cards) {
+  for (const c of cards) {
     table.push([
-      chalk.dim(card.id),
-      chalk.white(card.name || '—'),
-      card.category === 'Leader' ? chalk.yellowBright('Leader') : chalk.gray(card.category || '—'),
-      colorizeCardColors(card.colors),
-      card.cost != null ? chalk.bold(card.cost) : chalk.dim('—'),
-      card.power != null ? chalk.bold(card.power) : chalk.dim('—'),
-      colorizeRarity(card.rarity),
+      chalk.dim(c.id),
+      chalk.white(c.name || '—'),
+      c.category === 'Leader' ? chalk.yellowBright('Leader') : chalk.dim(c.category || '—'),
+      colorsTag(c.colors),
+      c.cost != null ? chalk.bold(c.cost) : chalk.dim('—'),
+      c.power != null ? chalk.bold(c.power) : chalk.dim('—'),
+      rarityTag(c.rarity),
     ]);
   }
-
   console.log(table.toString());
 }
 
+// ─── Sets table ──────────────────────────────────────────────────────────────
 export function printSetsTable(packs) {
   const table = new Table({
     head: ['Code', 'Name', 'Type'].map(c => chalk.bold.yellowBright(c)),
     style: { border: ['dim'], head: [] },
-    chars: {
-      top: '─', 'top-mid': '┬', 'top-left': '╭', 'top-right': '╮',
-      bottom: '─', 'bottom-mid': '┴', 'bottom-left': '╰', 'bottom-right': '╯',
-      left: '│', 'left-mid': '├', mid: '─', 'mid-mid': '┼',
-      right: '│', 'right-mid': '┤', middle: '│',
-    },
+    chars: TABLE_CHARS,
   });
 
-  for (const [, pack] of Object.entries(packs)) {
+  for (const pack of Object.values(packs)) {
     const label = pack.title_parts?.label || '—';
     const title = pack.title_parts?.title || pack.raw_title || '—';
     const prefix = pack.title_parts?.prefix || '—';
-    table.push([
-      chalk.bold.white(label),
-      chalk.white(title),
-      chalk.dim(prefix),
-    ]);
+    table.push([chalk.bold.white(label), chalk.white(title), chalk.dim(prefix)]);
   }
-
   console.log(table.toString());
 }
 
-export function printAnimeCharacter(char) {
-  const width = 52;
-  const top = chalk.dim('╭' + '─'.repeat(width) + '╮');
-  const bot = chalk.dim('╰' + '─'.repeat(width) + '╯');
-  const side = chalk.dim('│');
-  const row = (content) => `${side} ${content.padEnd(width)} ${side}`;
-
-  const name = char.name?.en || '?';
-  const status = char.status === 'Alive' ? chalk.green(char.status) : chalk.red(char.status || '?');
-  const bounties = char.bounties || [];
-  const activeBounty = bounties.find(b => b.is_active);
-  const maxBounty = bounties.reduce((max, b) => b.amount > max ? b.amount : max, 0);
-
-  console.log(top);
-  console.log(row(chalk.bold.redBright(name)));
-  console.log(row(chalk.dim('─'.repeat(width))));
-  console.log(row(`${chalk.dim('Status:')} ${status}`));
-  if (char.age) console.log(row(`${chalk.dim('Age:')} ${chalk.white(char.age)}`));
-  if (char.height) console.log(row(`${chalk.dim('Height:')} ${chalk.white(char.height + ' cm')}`));
-  if (char.blood_type) console.log(row(`${chalk.dim('Blood Type:')} ${chalk.white(char.blood_type)}`));
-  if (maxBounty > 0) {
-    const berryStr = formatBountyAmount(maxBounty);
-    const label = activeBounty ? 'Bounty (active):' : 'Bounty (highest):';
-    console.log(row(`${chalk.dim(label)} ${chalk.bold.yellowBright('฿' + berryStr)}`));
-  }
-  console.log(bot);
-}
-
-export function printAnimeCharactersTable(chars) {
+// ─── Anime characters ────────────────────────────────────────────────────────
+export function printCharactersTable(chars) {
   const table = new Table({
-    head: ['Name', 'Status', 'Age', 'Height', 'Bounty (฿)'].map(c => chalk.bold.redBright(c)),
+    head: ['Name', 'Status', 'Age', 'Height', 'Highest Bounty (฿)'].map(c => chalk.bold.redBright(c)),
     style: { border: ['dim'], head: [] },
-    chars: {
-      top: '─', 'top-mid': '┬', 'top-left': '╭', 'top-right': '╮',
-      bottom: '─', 'bottom-mid': '┴', 'bottom-left': '╰', 'bottom-right': '╯',
-      left: '│', 'left-mid': '├', mid: '─', 'mid-mid': '┼',
-      right: '│', 'right-mid': '┤', middle: '│',
-    },
+    chars: TABLE_CHARS,
   });
 
   const sorted = [...chars].sort((a, b) => {
@@ -239,49 +194,82 @@ export function printAnimeCharactersTable(chars) {
     return bMax - aMax;
   });
 
-  for (const char of sorted) {
-    const maxBounty = Math.max(...(char.bounties || []).map(x => x.amount), 0);
-    const statusStr = char.status === 'Alive' ? chalk.green('Alive') : chalk.red(char.status || '?');
+  for (const c of sorted) {
+    const maxBounty = Math.max(...(c.bounties || []).map(x => x.amount), 0);
+    const statusStr = c.status === 'Alive' ? chalk.green(c.status)
+      : c.status === 'Deceased' ? chalk.red(c.status)
+      : chalk.dim(c.status || '?');
     table.push([
-      chalk.bold.white(char.name?.en || '?'),
+      chalk.bold.white(c.name?.en || '?'),
       statusStr,
-      char.age ? chalk.white(char.age) : chalk.dim('?'),
-      char.height ? chalk.white(char.height + ' cm') : chalk.dim('?'),
-      maxBounty > 0 ? chalk.yellowBright(formatBountyAmount(maxBounty)) : chalk.dim('?'),
+      c.age ? chalk.white(c.age) : chalk.dim('?'),
+      c.height ? chalk.white(c.height + ' cm') : chalk.dim('?'),
+      maxBounty > 0 ? chalk.yellowBright(fmtBounty(maxBounty)) : chalk.dim('?'),
     ]);
   }
-
   console.log(table.toString());
 }
 
-function formatBountyAmount(amount) {
-  if (!amount) return '—';
-  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(0)}B`;
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(0)}M`;
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K`;
-  return amount.toString();
-}
+export function printCharacter(char) {
+  const W = 52;
+  const top = chalk.dim('╭' + '─'.repeat(W) + '╮');
+  const bot = chalk.dim('╰' + '─'.repeat(W) + '╯');
+  const side = chalk.dim('│');
+  const row = (content) => {
+    const plain = stripAnsi(content);
+    const pad = Math.max(0, W - plain.length);
+    return `${side} ${content}${' '.repeat(pad)} ${side}`;
+  };
 
-function wrapText(text, maxWidth) {
-  if (!text) return [];
-  const words = text.split(' ');
-  const lines = [];
-  let current = '';
-  for (const word of words) {
-    const stripped = stripAnsi(current + (current ? ' ' : '') + word);
-    if (stripped.length > maxWidth && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = current ? `${current} ${word}` : word;
-    }
+  const bounties = char.bounties || [];
+  const maxBounty = Math.max(...bounties.map(x => x.amount), 0);
+
+  console.log(top);
+  console.log(row(chalk.bold.redBright(char.name?.en || '?')));
+  if (char.name?.romaji) console.log(row(chalk.dim(char.name.romaji)));
+  console.log(row(chalk.dim('─'.repeat(W))));
+
+  const status = char.status === 'Alive' ? chalk.green(char.status)
+    : char.status === 'Deceased' ? chalk.red(char.status)
+    : chalk.dim(char.status || '?');
+
+  console.log(row(`${chalk.dim('Status:')}     ${status}`));
+  if (char.age)        console.log(row(`${chalk.dim('Age:')}        ${chalk.white(char.age)}`));
+  if (char.height)     console.log(row(`${chalk.dim('Height:')}     ${chalk.white(char.height + ' cm')}`));
+  if (char.blood_type) console.log(row(`${chalk.dim('Blood Type:')} ${chalk.white(char.blood_type)}`));
+  if (maxBounty > 0) {
+    console.log(row(`${chalk.dim('Bounty:')}     ${chalk.bold.yellowBright('฿' + fmtBounty(maxBounty))}`));
   }
-  if (current) lines.push(current);
-  return lines;
+  console.log(bot);
 }
 
-function stripAnsi(str) {
-  return str.replace(/\x1B\[[0-9;]*m/g, '');
+// ─── Devil fruits table ──────────────────────────────────────────────────────
+export function printDevilFruitsTable(fruits) {
+  const table = new Table({
+    head: ['Name', 'Romaji', 'Type', 'Sub-type', 'Model'].map(c => chalk.bold.redBright(c)),
+    style: { border: ['dim'], head: [] },
+    chars: TABLE_CHARS,
+  });
+
+  const typeColor = { Logia: chalk.yellowBright, Zoan: chalk.greenBright, Paramecia: chalk.cyanBright };
+
+  for (const f of fruits) {
+    const colorFn = typeColor[f.type] || chalk.white;
+    table.push([
+      chalk.bold.white(f.name?.en || '?'),
+      chalk.dim(f.name?.romaji || '?'),
+      colorFn(f.type || '?'),
+      f.sub_type ? chalk.magenta(f.sub_type) : chalk.dim('—'),
+      f.model?.en ? chalk.white(f.model.en) : chalk.dim('—'),
+    ]);
+  }
+  console.log(table.toString());
+}
+
+// ─── Shared UI ───────────────────────────────────────────────────────────────
+export function printHeader(title) {
+  console.log(chalk.bold.yellowBright(`⚓ ${title}`));
+  console.log(chalk.dim('─'.repeat(60)));
 }
 
 export function printError(msg) {
@@ -289,11 +277,14 @@ export function printError(msg) {
 }
 
 export function printInfo(msg) {
-  console.log(chalk.dim(msg));
+  process.stderr.write(chalk.dim(msg + '\n'));
 }
 
-export function printHeader(title) {
-  const width = 56;
-  console.log(chalk.bold.yellowBright('⚓ ' + title));
-  console.log(chalk.dim('─'.repeat(width)));
+// ─── Private helpers ─────────────────────────────────────────────────────────
+function fmtBounty(n) {
+  if (!n) return '—';
+  if (n >= 1e9) return `${(n / 1e9).toFixed(0)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(0)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
+  return String(n);
 }
