@@ -1,9 +1,9 @@
 import { getCardById, searchCardsByName } from '../utils/api.js';
 import { printCard, printCardsTable, printError, printInfo, printHeader } from '../utils/display.js';
-import { IMAGE_SIZES } from '../utils/image.js';
+import { HALFBLOCK_SIZES } from '../utils/image.js';
 import chalk from 'chalk';
 
-const VALID_SIZES = Object.keys(IMAGE_SIZES); // ['sm', 'md', 'lg']
+const VALID_SIZES = Object.keys(HALFBLOCK_SIZES); // ['sm', 'md', 'lg']
 
 function isCardId(input) {
   return /^[A-Za-z]{1,5}\d{0,2}-\d{3}/.test(input) || /^P-\d+/.test(input);

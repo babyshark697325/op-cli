@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { fetchAndRenderCardImage } from './image.js';
+import { fetchAndRenderCardImage, detectProtocol, isAppleTerminal } from './image.js';
 
 // ─── One Piece TCG color theming ────────────────────────────────────────────
 const COLOR_FN = {
@@ -86,12 +86,26 @@ export async function printCard(card, { imageSize } = {}) {
 
   // Optional card image above the panel
   if (imageSize && card.img_full_url) {
-    try {
-      const img = await fetchAndRenderCardImage(card.img_full_url, imageSize);
-      process.stdout.write(img);
+    const protocol = detectProtocol();
+
+    if (isAppleTerminal()) {
+      console.log(chalk.yellow('⚠  Apple Terminal does not support inline images.'));
+      console.log(chalk.dim('   For pixel-perfect card art, use ') + chalk.white('iTerm2') + chalk.dim(' or ') + chalk.white('Kitty') + chalk.dim(' terminal.'));
+      console.log(chalk.dim('   Download iTerm2 free at iterm2.com'));
       console.log('');
-    } catch {
-      // silently skip if image fails
+    } else {
+      try {
+        const img = await fetchAndRenderCardImage(card.img_full_url, imageSize);
+        process.stdout.write(img);
+        console.log('');
+        if (protocol === 'halfblock') {
+          console.log(chalk.dim(`  (half-block art — for pixel-perfect images use iTerm2 or Kitty)`));
+          console.log('');
+        }
+      } catch (err) {
+        console.log(chalk.dim(`  (image unavailable: ${err.message})`));
+        console.log('');
+      }
     }
   }
 
