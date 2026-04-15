@@ -4,7 +4,7 @@
   "description": "One Piece TCG CLI - look up cards, sets, and more",
   "main": "src/index.js",
   "bin": {
-    "op": "src/index.js"
+    "op": "bin/op.mjs"
   },
   "type": "module",
   "scripts": {
