@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import Table from 'cli-table3';
+import terminalImage from 'terminal-image';
 
 // One Piece TCG color theming
 const COLOR_MAP = {
@@ -42,6 +43,29 @@ export function formatBerry(amount) {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(0)}M`;
   if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K`;
   return amount.toString();
+}
+
+export async function printCardImage(card) {
+  const url = card.img_full_url;
+  if (!url) {
+    console.log(chalk.dim('  (no image available)'));
+    return;
+  }
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Referer': 'https://en.onepiece-cardgame.com/',
+      },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    const img = await terminalImage.buffer(buf, { width: 32, preserveAspectRatio: true });
+    process.stdout.write(img);
+    console.log('');
+  } catch (err) {
+    console.log(chalk.dim(`  (image unavailable: ${err.message})`));
+  }
 }
 
 export function printCard(card) {

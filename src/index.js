@@ -15,7 +15,7 @@ program
   .addHelpText('after', `
 ${chalk.bold('Examples:')}
   ${chalk.dim('$')} op card luffy               ${chalk.dim('# list all Luffy TCG cards')}
-  ${chalk.dim('$')} op card OP01-001            ${chalk.dim('# show full card details')}
+  ${chalk.dim('$')} op card OP01-001 --image    ${chalk.dim('# show card art + details')}
   ${chalk.dim('$')} op set OP01                 ${chalk.dim('# browse Romance Dawn set')}
   ${chalk.dim('$')} op sets                     ${chalk.dim('# list all sets & starter decks')}
   ${chalk.dim('$')} op character                ${chalk.dim('# list anime characters + bounties')}
@@ -29,6 +29,7 @@ program
   .option('-c, --color <color>', 'filter by color (Red, Blue, Green, Purple, Black, Yellow)')
   .option('-t, --type <type>', 'filter by category (Leader, Character, Event, Stage, DON!!)')
   .option('-a, --all', 'show all variants including alt arts')
+  .option('-i, --image', 'show card art in the terminal')
   .addHelpText('after', `
 ${chalk.bold('Examples:')}
   ${chalk.dim('$')} op card luffy

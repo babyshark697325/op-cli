@@ -1,6 +1,7 @@
 import { getCardById, searchCardsByName } from '../utils/api.js';
 import {
   printCard,
+  printCardImage,
   printCardsTable,
   printError,
   printInfo,
@@ -33,6 +34,7 @@ export async function cardCommand(input, opts) {
         process.exit(1);
       }
       console.log('');
+      if (opts.image) await printCardImage(card);
       printCard(card);
     } catch (err) {
       printError(`Failed to fetch card: ${err.message}`);
@@ -97,6 +99,7 @@ export async function cardCommand(input, opts) {
     const fullCard = await getCardById(results[0].id);
     if (fullCard) {
       console.log('');
+      if (opts.image) await printCardImage(fullCard);
       printCard(fullCard);
       return;
     }
