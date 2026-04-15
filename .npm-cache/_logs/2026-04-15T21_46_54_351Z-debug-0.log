@@ -1,0 +1,116 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@11.12.1
+2 info using node@v22.18.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/keirawest/op-cli/.npmrc
+5 silly config load:file:/Users/keirawest/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:/Users/keirawest/op-cli/.npm-cache/_logs/2026-04-15T21_46_54_351Z-
+10 verbose logfile /Users/keirawest/op-cli/.npm-cache/_logs/2026-04-15T21_46_54_351Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest chalk@^5.3.0
+15 silly packumentCache full:https://registry.npmjs.org/chalk cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/npm 310ms
+17 http fetch GET 200 https://registry.npmjs.org/chalk 304ms (cache miss)
+18 silly packumentCache full:https://registry.npmjs.org/chalk set size:undefined disposed:false
+19 silly fetch manifest commander@^12.0.0
+20 silly packumentCache full:https://registry.npmjs.org/commander cache-miss
+21 http fetch GET 200 https://registry.npmjs.org/commander 42ms (cache miss)
+22 silly packumentCache full:https://registry.npmjs.org/commander set size:undefined disposed:false
+23 silly fetch manifest cli-table3@^0.6.3
+24 silly packumentCache full:https://registry.npmjs.org/cli-table3 cache-miss
+25 http fetch GET 200 https://registry.npmjs.org/cli-table3 39ms (cache miss)
+26 silly packumentCache full:https://registry.npmjs.org/cli-table3 set size:undefined disposed:false
+27 silly placeDep ROOT chalk@5.6.2 OK for: op-cli@1.0.0 want: ^5.3.0
+28 silly placeDep ROOT cli-table3@0.6.5 OK for: op-cli@1.0.0 want: ^0.6.3
+29 silly placeDep ROOT commander@12.1.0 OK for: op-cli@1.0.0 want: ^12.0.0
+30 silly fetch manifest string-width@^4.2.0
+31 silly packumentCache full:https://registry.npmjs.org/string-width cache-miss
+32 silly fetch manifest @colors/colors@1.5.0
+33 silly packumentCache full:https://registry.npmjs.org/@colors%2fcolors cache-miss
+34 http fetch GET 200 https://registry.npmjs.org/string-width 34ms (cache miss)
+35 silly packumentCache full:https://registry.npmjs.org/string-width set size:undefined disposed:false
+36 http fetch GET 200 https://registry.npmjs.org/@colors%2fcolors 70ms (cache miss)
+37 silly packumentCache full:https://registry.npmjs.org/@colors%2fcolors set size:undefined disposed:false
+38 silly placeDep ROOT @colors/colors@1.5.0 OK for: cli-table3@0.6.5 want: 1.5.0
+39 silly placeDep ROOT string-width@4.2.3 OK for: cli-table3@0.6.5 want: ^4.2.0
+40 silly fetch manifest strip-ansi@^6.0.1
+41 silly packumentCache full:https://registry.npmjs.org/strip-ansi cache-miss
+42 silly fetch manifest emoji-regex@^8.0.0
+43 silly packumentCache full:https://registry.npmjs.org/emoji-regex cache-miss
+44 silly fetch manifest is-fullwidth-code-point@^3.0.0
+45 silly packumentCache full:https://registry.npmjs.org/is-fullwidth-code-point cache-miss
+46 http fetch GET 200 https://registry.npmjs.org/strip-ansi 42ms (cache miss)
+47 silly packumentCache full:https://registry.npmjs.org/strip-ansi set size:undefined disposed:false
+48 http fetch GET 200 https://registry.npmjs.org/emoji-regex 43ms (cache miss)
+49 silly packumentCache full:https://registry.npmjs.org/emoji-regex set size:undefined disposed:false
+50 http fetch GET 200 https://registry.npmjs.org/is-fullwidth-code-point 132ms (cache miss)
+51 silly packumentCache full:https://registry.npmjs.org/is-fullwidth-code-point set size:undefined disposed:false
+52 silly placeDep ROOT emoji-regex@8.0.0 OK for: string-width@4.2.3 want: ^8.0.0
+53 silly placeDep ROOT is-fullwidth-code-point@3.0.0 OK for: string-width@4.2.3 want: ^3.0.0
+54 silly placeDep ROOT strip-ansi@6.0.1 OK for: string-width@4.2.3 want: ^6.0.1
+55 silly fetch manifest ansi-regex@^5.0.1
+56 silly packumentCache full:https://registry.npmjs.org/ansi-regex cache-miss
+57 http fetch GET 200 https://registry.npmjs.org/ansi-regex 39ms (cache miss)
+58 silly packumentCache full:https://registry.npmjs.org/ansi-regex set size:undefined disposed:false
+59 silly placeDep ROOT ansi-regex@5.0.1 OK for: strip-ansi@6.0.1 want: ^5.0.1
+60 silly reify moves {}
+61 silly audit bulk request {
+61 silly audit   chalk: [ '5.6.2' ],
+61 silly audit   'cli-table3': [ '0.6.5' ],
+61 silly audit   commander: [ '12.1.0' ],
+61 silly audit   '@colors/colors': [ '1.5.0' ],
+61 silly audit   'string-width': [ '4.2.3' ],
+61 silly audit   'emoji-regex': [ '8.0.0' ],
+61 silly audit   'is-fullwidth-code-point': [ '3.0.0' ],
+61 silly audit   'strip-ansi': [ '6.0.1' ],
+61 silly audit   'ansi-regex': [ '5.0.1' ]
+61 silly audit }
+62 http cache strip-ansi@https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz 0ms (cache hit)
+63 http cache is-fullwidth-code-point@https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz 0ms (cache hit)
+64 http cache emoji-regex@https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz 0ms (cache hit)
+65 http cache ansi-regex@https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz 0ms (cache hit)
+66 http cache cli-table3@https://registry.npmjs.org/cli-table3/-/cli-table3-0.6.5.tgz 0ms (cache hit)
+67 http cache commander@https://registry.npmjs.org/commander/-/commander-12.1.0.tgz 0ms (cache hit)
+68 http cache @colors/colors@https://registry.npmjs.org/@colors/colors/-/colors-1.5.0.tgz 0ms (cache hit)
+69 http cache string-width@https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz 0ms (cache hit)
+70 http cache chalk@https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz 0ms (cache hit)
+71 silly tarball no local data for strip-ansi@https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz. Extracting by manifest.
+72 silly tarball no local data for is-fullwidth-code-point@https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz. Extracting by manifest.
+73 silly tarball no local data for emoji-regex@https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz. Extracting by manifest.
+74 silly tarball no local data for ansi-regex@https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz. Extracting by manifest.
+75 silly tarball no local data for cli-table3@https://registry.npmjs.org/cli-table3/-/cli-table3-0.6.5.tgz. Extracting by manifest.
+76 silly tarball no local data for commander@https://registry.npmjs.org/commander/-/commander-12.1.0.tgz. Extracting by manifest.
+77 silly tarball no local data for @colors/colors@https://registry.npmjs.org/@colors/colors/-/colors-1.5.0.tgz. Extracting by manifest.
+78 silly tarball no local data for string-width@https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz. Extracting by manifest.
+79 silly tarball no local data for chalk@https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz. Extracting by manifest.
+80 http fetch GET 200 https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz 45ms (cache miss)
+81 http fetch GET 200 https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz 47ms (cache miss)
+82 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 107ms
+83 silly audit report {}
+84 http fetch GET 200 https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz 184ms (cache miss)
+85 http fetch GET 200 https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz 354ms (cache miss)
+86 http fetch GET 200 https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz 354ms (cache miss)
+87 http fetch GET 200 https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz 356ms (cache miss)
+88 http fetch GET 200 https://registry.npmjs.org/cli-table3/-/cli-table3-0.6.5.tgz 358ms (cache miss)
+89 http fetch GET 200 https://registry.npmjs.org/commander/-/commander-12.1.0.tgz 360ms (cache miss)
+90 http fetch GET 200 https://registry.npmjs.org/@colors/colors/-/colors-1.5.0.tgz 478ms (cache miss)
+91 silly ADD node_modules/ansi-regex
+92 silly ADD node_modules/strip-ansi
+93 silly ADD node_modules/is-fullwidth-code-point
+94 silly ADD node_modules/emoji-regex
+95 silly ADD node_modules/string-width
+96 silly ADD node_modules/@colors/colors
+97 silly ADD node_modules/commander
+98 silly ADD node_modules/cli-table3
+99 silly ADD node_modules/chalk
+100 verbose cwd /Users/keirawest/op-cli
+101 verbose os Darwin 25.0.0
+102 verbose node v22.18.0
+103 verbose npm  v11.12.1
+104 verbose exit 0
+105 info ok

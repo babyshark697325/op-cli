@@ -1,0 +1,25 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@11.12.1
+2 info using node@v22.18.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/keirawest/op-cli/.npmrc
+5 silly config load:file:/Users/keirawest/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm link
+8 verbose argv "link"
+9 verbose logfile logs-max:10 dir:/Users/keirawest/op-cli/.npm-cache/_logs/2026-04-15T21_47_41_745Z-
+10 verbose logfile /Users/keirawest/op-cli/.npm-cache/_logs/2026-04-15T21_47_41_745Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly placeDep ROOT op-cli@1.0.0 OK for:  want: file:../../../Users/keirawest/op-cli
+15 silly reify moves {}
+16 silly audit bulk request {}
+17 silly audit report null
+18 silly ADD node_modules/op-cli
+19 verbose cwd /Users/keirawest/op-cli
+20 verbose os Darwin 25.0.0
+21 verbose node v22.18.0
+22 verbose npm  v11.12.1
+23 verbose exit 0
+24 info ok
